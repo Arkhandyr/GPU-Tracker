@@ -1,22 +1,29 @@
 from selenium import webdriver
-from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
-products=[]
-prices=[]
+source, items, prices, discounts = [], [], [], []
+
 driver.get("https://www.kabum.com.br/busca/rtx-3060")
 
-content = driver.page_source
-soup = BeautifulSoup(content)
-for a in soup.findAll('div',href=True, attrs={'class':'sc-ff8a9791-7 dZlrn productCard'}):
-    name=a.find('span', attrs={'class':'sc-d99ca57-0 iRparH sc-ff8a9791-16 kRYNji nameCard'})
-    price=a.find('span', attrs={'class':'sc-3b515ca1-2 jTvomc priceCard'})
-    products.append(name.text)
-    prices.append(price.text)
+products = driver.find_elements(By.CLASS_NAME, 'sc-ff8a9791-7')
+print(f'{len(products)} itens encontrados.')
+
+for product in products:
+    source = 'Kabum'
+    item = product.find_element(By.CLASS_NAME, 'sc-d99ca57-0')
+    price = product.find_element(By.CLASS_NAME,  'sc-3b515ca1-2')
+    try:
+        discount = product.find_element(By.CSS_SELECTOR, 'div.sc-ff8a9791-5 p')
+        discounts.append(discount.text)
+    except:
+        discounts.append(None)
+    items.append(item.text)
+    prices.append((price.text).replace('.','').replace(',','.'))
     
-print('completed')
-df = pd.DataFrame({'Produto':products,'Preço':prices}) 
-df.to_csv('produtos.csv', index=False, encoding='utf-8')
+df = pd.DataFrame({'Produto':items,'Preço':prices, 'Desconto':discounts, 'Loja':source}) 
+df.sort_values(by='Preço', key=lambda s: s.str[3:].astype(float))
+df.to_csv('products.csv', index=False, encoding='utf-8')
