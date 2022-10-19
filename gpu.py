@@ -8,11 +8,8 @@ driver = webdriver.Chrome(ChromeDriverManager().install())
 source, items, prices, discounts = [], [], [], []
 
 driver.get("https://www.kabum.com.br/busca/rtx-3060")
-
-products = driver.find_elements(By.CLASS_NAME, 'sc-ff8a9791-7')
-print(f'{len(products)} itens encontrados.')
-
-for product in products:
+productsKabum = driver.find_elements(By.CLASS_NAME, 'sc-ff8a9791-7')
+for product in productsKabum:
     source = 'Kabum'
     item = product.find_element(By.CLASS_NAME, 'sc-d99ca57-0')
     price = product.find_element(By.CLASS_NAME,  'sc-3b515ca1-2')
@@ -21,6 +18,15 @@ for product in products:
         discounts.append(discount.text)
     except:
         discounts.append(None)
+    items.append(item.text)
+    prices.append((price.text).replace('.','').replace(',','.'))
+
+driver.get("https://www.pichau.com.br/search?q=rtx%203060&product_category=6459")
+productsPichau = driver.find_elements(By.CLASS_NAME, 'MuiCardContent-root')
+for product in productsPichau:
+    source = 'Pichau'
+    item = product.find_element(By.CLASS_NAME, 'MuiTypography-root')
+    price = product.find_element(By.CLASS_NAME,  'jss204')
     items.append(item.text)
     prices.append((price.text).replace('.','').replace(',','.'))
     
